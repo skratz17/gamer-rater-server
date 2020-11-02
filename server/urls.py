@@ -1,5 +1,4 @@
 """Route Configuration"""
-from django.contrib import admin
 from django.urls import path
 from django.conf.urls import include
 from raterapp.views import login_user, register_user
