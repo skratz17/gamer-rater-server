@@ -33,4 +33,6 @@ class GameSerializer(serializers.HyperlinkedModelSerializer):
             view_name='game',
             lookup_field='id'
         )
+
+        # TODO: add designer field once serializer implemented for designer
         fields = ('id', 'url', 'title', 'description', 'year', 'num_players', 'estimated_duration', 'age_recommendation')
