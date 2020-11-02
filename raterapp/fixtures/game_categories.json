@@ -1,0 +1,50 @@
+[
+  {
+    "model": "raterapp.gamecategory",
+    "pk": 1,
+    "fields": {
+      "game": 1,
+      "category": 1
+    }
+  },
+  {
+    "model": "raterapp.gamecategory",
+    "pk": 2,
+    "fields": {
+      "game": 1,
+      "category": 10
+    }
+  },
+  {
+    "model": "raterapp.gamecategory",
+    "pk": 3,
+    "fields": {
+      "game": 2,
+      "category": 6
+    }
+  },
+  {
+    "model": "raterapp.gamecategory",
+    "pk": 4,
+    "fields": {
+      "game": 2,
+      "category": 8
+    }
+  },
+  {
+    "model": "raterapp.gamecategory",
+    "pk": 5,
+    "fields": {
+      "game": 3,
+      "category": 7
+    }
+  },
+  {
+    "model": "raterapp.gamecategory",
+    "pk": 6,
+    "fields": {
+      "game": 4,
+      "category": 9
+    }
+  }
+]
