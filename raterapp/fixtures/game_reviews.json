@@ -1,0 +1,46 @@
+[
+  {
+    "model": "raterapp.gamereview",
+    "pk": 1,
+    "fields": {
+      "rating": 9,
+      "review": "Sid Meier's Civilization VI is a lovely RTS game that I ocassionaly become so addicted to that the rest of my life ceases to progress forward.",
+      "timestamp": "2020-11-02T19:58:09.178Z",
+      "game": 1,
+      "player": 1
+    }
+  },
+  {
+    "model": "raterapp.gamereview",
+    "pk": 2,
+    "fields": {
+      "rating": 10,
+      "review": "Persona V is one of the best RPGs that I have ever played, and I have never really played a JRPG like it before so I am a total newb and my taste is surely basic so don't judge me but I really liked it okay!!!??",
+      "timestamp": "2020-11-02T20:00:04.993Z",
+      "game": 2,
+      "player": 1
+    }
+  },
+  {
+    "model": "raterapp.gamereview",
+    "pk": 3,
+    "fields": {
+      "rating": 1,
+      "review": "EA is a garbage company, and their game is broken, and as a huge hockey fan it is so sad to see them having complete market dominance over the world of hockey video games while simultaneously giving absolutely zero care or attention to the development of said games.",
+      "timestamp": "2020-11-02T20:00:57.960Z",
+      "game": 3,
+      "player": 1
+    }
+  },
+  {
+    "model": "raterapp.gamereview",
+    "pk": 4,
+    "fields": {
+      "rating": 7,
+      "review": "Keep Talking and Nobody Explodes is a fun game! It is nothing revolutionary, but it's a fun thing to play, I would definitely recommend breaking it out with your SO sometime it is a fun little cooperative thing to do as a couple!",
+      "timestamp": "2020-11-02T20:01:43.560Z",
+      "game": 4,
+      "player": 1
+    }
+  }
+]

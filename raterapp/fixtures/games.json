@@ -1,0 +1,54 @@
+[
+  {
+    "model": "raterapp.game",
+    "pk": 1,
+    "fields": {
+      "title": "Civilization VI",
+      "description": "A world-building, civilization-building, single- or multi-player extravaganza for Mac or PC or Switch.",
+      "year": 2016,
+      "num_players": 12,
+      "estimated_duration": 300,
+      "age_recommendation": 15,
+      "designer": 1
+    }
+  },
+  {
+    "model": "raterapp.game",
+    "pk": 2,
+    "fields": {
+      "title": "Persona V",
+      "description": "An awesome, character-driven, JRPG and also the only JRPG I've ever played but it's really good dawg.",
+      "year": 2016,
+      "num_players": 1,
+      "estimated_duration": 5000,
+      "age_recommendation": 18,
+      "designer": 2
+    }
+  },
+  {
+    "model": "raterapp.game",
+    "pk": 3,
+    "fields": {
+      "title": "NHL 20",
+      "description": "EA is a garbage company, and they have made yet another garbage hockey simulation game, and it makes me very angry.",
+      "year": 2019,
+      "num_players": 2,
+      "estimated_duration": 20,
+      "age_recommendation": 13,
+      "designer": 3
+    }
+  },
+  {
+    "model": "raterapp.game",
+    "pk": 4,
+    "fields": {
+      "title": "Keep Talking and Nobody Explodes",
+      "description": "A cooperative bomb-defusing game that is super fun to play with friends!",
+      "year": 2015,
+      "num_players": 4,
+      "estimated_duration": 10,
+      "age_recommendation": 13,
+      "designer": 4
+    }
+  }
+]
