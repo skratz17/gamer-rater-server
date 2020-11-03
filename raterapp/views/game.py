@@ -1,11 +1,51 @@
 """Games ViewSet and Serializer"""
+from rest_framework.status import HTTP_201_CREATED, HTTP_400_BAD_REQUEST
 from rest_framework.viewsets import ViewSet
 from rest_framework.response import Response
 from rest_framework import status, serializers
-from raterapp.models import Game, Designer, GameCategory
+from raterapp.models import Game, Category, Designer, GameCategory
 
 class Games(ViewSet):
     """Games ViewSet"""
+
+    def create(self, request):
+        """POST new game"""
+        # TODO: implement more validation!
+        game = Game()
+
+        try:
+            category = Category.objects.get(pk=request.data['categoryId'])
+        except Category.DoesNotExist:
+            return Response(
+                {'message': '`categoryId` provided does not match an existing Category.'},
+                status=HTTP_400_BAD_REQUEST
+            )
+
+        try:
+            designer = Designer.objects.get(pk=request.data['designerId'])
+        except Designer.DoesNotExist:
+            return Response(
+                {'message': '`designerId` provided does not match an existing Designer.'},
+                status=HTTP_400_BAD_REQUEST
+            )
+
+        game.title = request.data['title']
+        game.description = request.data['description']
+        game.year = request.data['year']
+        game.num_players = request.data['numPlayers']
+        game.estimated_duration = request.data['estimatedDuration']
+        game.age_recommendation = request.data['ageRecommendation']
+        game.designer = designer
+
+        game.save()
+
+        game_category = GameCategory()
+        game_category.game = game
+        game_category.category = category
+
+        game_category.save()
+
+        return Response(status=HTTP_201_CREATED)
 
     def retrieve(self, request, pk=None):
         """GET game by id"""
