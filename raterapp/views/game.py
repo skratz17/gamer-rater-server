@@ -2,7 +2,7 @@
 from rest_framework.viewsets import ViewSet
 from rest_framework.response import Response
 from rest_framework import status, serializers
-from raterapp.models import Game, Designer
+from raterapp.models import Game, Designer, GameCategory, Category
 
 class Games(ViewSet):
     """Games ViewSet"""
@@ -11,10 +11,22 @@ class Games(ViewSet):
         """GET game by id"""
         try:
             game = Game.objects.get(pk=pk)
-            serializer = GameSerializer(game, context={'request': request})
-            return Response(serializer.data)
         except Game.DoesNotExist as ex:
             return Response({'message': ex.args[0]}, status=status.HTTP_404_NOT_FOUND)
+
+        game_categories = GameCategory.objects.filter(game=game)
+
+        serialized_game = GameSerializer(game, context={'request': request})
+        serialized_categories = GameCategorySerializer(
+            game_categories, many=True, context={'request': request}
+        )
+
+        response = { 
+            "game": serialized_game.data,
+            "categories": serialized_categories.data
+        }
+
+        return Response(response)
 
     def list(self, request):
         """GET all games"""
@@ -54,3 +66,10 @@ class GameSerializer(serializers.HyperlinkedModelSerializer):
         )
 
         fields = ('id', 'url', 'title', 'description', 'year', 'num_players', 'estimated_duration', 'age_recommendation', 'designer')
+
+class GameCategorySerializer(serializers.ModelSerializer):
+    """JSON serializer for game_category objects"""
+    class Meta:
+        model = GameCategory
+        fields = ('id', 'category')
+        depth = 1
