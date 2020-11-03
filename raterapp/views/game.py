@@ -2,7 +2,7 @@
 from rest_framework.viewsets import ViewSet
 from rest_framework.response import Response
 from rest_framework import status, serializers
-from raterapp.models import Game
+from raterapp.models import Game, Designer
 
 class Games(ViewSet):
     """Games ViewSet"""
@@ -21,11 +21,30 @@ class Games(ViewSet):
         # TODO: implement searching/filtering by query string param here
         games = Game.objects.all()
 
-        serializer = GameSerializer(games, many=True, context={'request': request})
+        serializer = MinimalGameSerializer(games, many=True, context={'request': request})
         return Response(serializer.data)
 
+class MinimalGameSerializer(serializers.HyperlinkedModelSerializer):
+    """JSON serializer for only game name, id, and url"""
+
+    class Meta:
+        model = Game
+        url = serializers.HyperlinkedIdentityField(
+            view_name="game",
+            lookup_field="id"
+        )
+        fields = ('id', 'url', 'title')
+
+class DesignerSerializer(serializers.ModelSerializer):
+    """JSON serializer for designer"""
+
+    class Meta:
+        model = Designer
+        fields = ('id', 'name')
+
 class GameSerializer(serializers.HyperlinkedModelSerializer):
-    """JSON serializer for games"""
+    """JSON serializer for full game object"""
+    designer = DesignerSerializer(many=False)
 
     class Meta:
         model = Game
@@ -34,5 +53,4 @@ class GameSerializer(serializers.HyperlinkedModelSerializer):
             lookup_field='id'
         )
 
-        # TODO: add designer field once serializer implemented for designer
-        fields = ('id', 'url', 'title', 'description', 'year', 'num_players', 'estimated_duration', 'age_recommendation')
+        fields = ('id', 'url', 'title', 'description', 'year', 'num_players', 'estimated_duration', 'age_recommendation', 'designer')
