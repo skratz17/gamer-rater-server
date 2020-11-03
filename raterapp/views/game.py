@@ -2,7 +2,7 @@
 from rest_framework.viewsets import ViewSet
 from rest_framework.response import Response
 from rest_framework import status, serializers
-from raterapp.models import Game, Designer, GameCategory, Category
+from raterapp.models import Game, Designer, GameCategory
 
 class Games(ViewSet):
     """Games ViewSet"""
@@ -21,9 +21,9 @@ class Games(ViewSet):
             game_categories, many=True, context={'request': request}
         )
 
-        response = { 
-            "game": serialized_game.data,
-            "categories": serialized_categories.data
+        response = {
+            **serialized_game.data,
+            'categories': serialized_categories.data
         }
 
         return Response(response)
