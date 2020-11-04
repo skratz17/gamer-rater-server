@@ -4,13 +4,15 @@ from django.conf import settings
 from django.conf.urls import include
 from django.conf.urls.static import static
 from rest_framework import routers
-from raterapp.views import login_user, register_user, Games, Categories, Designers, GameReviews
+from raterapp.views import login_user, register_user 
+from raterapp.views import Games, Categories, Designers, GameReviews, GameImages
 
 router = routers.DefaultRouter(trailing_slash=False)
 router.register(r'games', Games, 'game')
 router.register(r'categories', Categories, 'category')
 router.register(r'designers', Designers, 'designer')
 router.register(r'reviews', GameReviews, 'review')
+router.register(r'images', GameImages, 'image')
 
 urlpatterns = [
     path('', include(router.urls)),
