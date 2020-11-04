@@ -1,6 +1,7 @@
 """Game database model module"""
 from django.db import models
-from . import Designer
+from statistics import mean
+from .game_review import GameReview
 
 class Game(models.Model):
     """Game database model"""
@@ -10,13 +11,11 @@ class Game(models.Model):
     num_players = models.IntegerField()
     estimated_duration = models.IntegerField()
     age_recommendation = models.IntegerField()
-    designer = models.ForeignKey(Designer, on_delete=models.CASCADE)
+    designer = models.ForeignKey('raterapp.Designer', on_delete=models.CASCADE)
 
     @property
-    def categories(self):
-        """Unmapped model property for categories game is classified under"""
-        return self.__categories
+    def average_rating(self):
+        """Unmapped model property for average rating of game"""
+        reviews = GameReview.objects.filter(game=self)
 
-    @categories.setter
-    def categories(self, value):
-        self.__categories = value
+        return mean([ review.rating for review in reviews ])

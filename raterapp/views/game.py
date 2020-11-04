@@ -75,7 +75,7 @@ class MinimalGameSerializer(serializers.HyperlinkedModelSerializer):
             view_name="game",
             lookup_field="id"
         )
-        fields = ('id', 'url', 'title')
+        fields = ('id', 'url', 'title', 'average_rating')
 
 class DesignerSerializer(serializers.ModelSerializer):
     """JSON serializer for designer"""
@@ -104,6 +104,6 @@ class GameSerializer(serializers.HyperlinkedModelSerializer):
         )
 
         fields = (
-            'id', 'url', 'title', 'description', 'year', 'num_players', 
-            'estimated_duration', 'age_recommendation', 'designer', 'categories'
+            'id', 'url', 'title', 'description', 'year', 'num_players',
+            'estimated_duration', 'age_recommendation', 'designer', 'categories', 'average_rating'
         )
