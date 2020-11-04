@@ -54,19 +54,10 @@ class Games(ViewSet):
         except Game.DoesNotExist as ex:
             return Response({'message': ex.args[0]}, status=status.HTTP_404_NOT_FOUND)
 
-        game_categories = GameCategory.objects.filter(game=game)
+        game.categories = GameCategory.objects.filter(game=game)
 
         serialized_game = GameSerializer(game, context={'request': request})
-        serialized_categories = GameCategorySerializer(
-            game_categories, many=True, context={'request': request}
-        )
-
-        response = {
-            **serialized_game.data,
-            'categories': serialized_categories.data
-        }
-
-        return Response(response)
+        return Response(serialized_game.data)
 
     def list(self, request):
         """GET all games"""
@@ -94,9 +85,17 @@ class DesignerSerializer(serializers.ModelSerializer):
         model = Designer
         fields = ('id', 'name')
 
+class GameCategorySerializer(serializers.ModelSerializer):
+    """JSON serializer for game_category objects"""
+    class Meta:
+        model = GameCategory
+        fields = ('id', 'category')
+        depth = 1
+
 class GameSerializer(serializers.HyperlinkedModelSerializer):
     """JSON serializer for full game object"""
     designer = DesignerSerializer(many=False)
+    categories = GameCategorySerializer(many=True)
 
     class Meta:
         model = Game
@@ -105,11 +104,7 @@ class GameSerializer(serializers.HyperlinkedModelSerializer):
             lookup_field='id'
         )
 
-        fields = ('id', 'url', 'title', 'description', 'year', 'num_players', 'estimated_duration', 'age_recommendation', 'designer')
-
-class GameCategorySerializer(serializers.ModelSerializer):
-    """JSON serializer for game_category objects"""
-    class Meta:
-        model = GameCategory
-        fields = ('id', 'category')
-        depth = 1
+        fields = (
+            'id', 'url', 'title', 'description', 'year', 'num_players', 
+            'estimated_duration', 'age_recommendation', 'designer', 'categories'
+        )
