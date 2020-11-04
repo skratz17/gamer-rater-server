@@ -11,3 +11,12 @@ class Game(models.Model):
     estimated_duration = models.IntegerField()
     age_recommendation = models.IntegerField()
     designer = models.ForeignKey(Designer, on_delete=models.CASCADE)
+
+    @property
+    def categories(self):
+        """Unmapped model property for categories game is classified under"""
+        return self.__categories
+
+    @categories.setter
+    def categories(self, value):
+        self.__categories = value
