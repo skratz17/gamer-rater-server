@@ -9,6 +9,7 @@ class GameReviews(ViewSet):
     """ViewSet class for GameReviews"""
 
     def list(self, request):
+        """GET all reviews (optionally filter by gameId query string param)"""
         reviews = GameReview.objects.all()
 
         game_id = self.request.query_params.get('gameId', None)
@@ -18,6 +19,31 @@ class GameReviews(ViewSet):
         serialization = GameReviewSerializer(reviews, many=True)
 
         return Response(serialization.data, status=status.HTTP_200_OK)
+
+    def create(self, request):
+        """POST a new review"""
+
+        # TODO: more validation!!
+        player = Player.objects.get(user=request.auth.user)
+
+        try:
+            game = Game.objects.get(pk=request.data["gameId"])
+        except Game.DoesNotExist:
+            return Response(
+                {'message': 'There is no game with the supplied gameId.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        review = GameReview()
+        review.player = player
+        review.game = game
+        review.rating = request.data["rating"]
+        review.review = request.data["review"]
+        review.timestamp = request.data["timestamp"]
+
+        review.save()
+
+        return Response({}, status=status.HTTP_201_CREATED)
 
 class GameReviewUserSerializer(serializers.ModelSerializer):
     """JSON serializer for user nested in a review (via player)"""
