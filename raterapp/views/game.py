@@ -1,5 +1,4 @@
 """Games ViewSet and Serializer"""
-from rest_framework.status import HTTP_201_CREATED, HTTP_400_BAD_REQUEST
 from rest_framework.viewsets import ViewSet
 from rest_framework.response import Response
 from rest_framework import status, serializers
@@ -18,7 +17,7 @@ class Games(ViewSet):
         except Category.DoesNotExist:
             return Response(
                 {'message': '`categoryId` provided does not match an existing Category.'},
-                status=HTTP_400_BAD_REQUEST
+                status=status.HTTP_400_BAD_REQUEST
             )
 
         try:
@@ -26,7 +25,7 @@ class Games(ViewSet):
         except Designer.DoesNotExist:
             return Response(
                 {'message': '`designerId` provided does not match an existing Designer.'},
-                status=HTTP_400_BAD_REQUEST
+                status=status.HTTP_400_BAD_REQUEST
             )
 
         game.title = request.data['title']
@@ -45,7 +44,7 @@ class Games(ViewSet):
 
         game_category.save()
 
-        return Response(status=HTTP_201_CREATED)
+        return Response(status=status.HTTP_201_CREATED)
 
     def retrieve(self, request, pk=None):
         """GET game by id"""
