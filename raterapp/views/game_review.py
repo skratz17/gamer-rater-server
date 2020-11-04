@@ -37,7 +37,7 @@ class GameReviewPlayerSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Player
-        fields = ('user', )
+        fields = ('id', 'user', )
 
 class GameReviewSerializer(serializers.ModelSerializer):
     """JSON serializer for review"""
@@ -46,4 +46,4 @@ class GameReviewSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = GameReview
-        fields = ('rating', 'review', 'timestamp', 'game', 'player')
+        fields = ('id', 'rating', 'review', 'timestamp', 'game', 'player')
