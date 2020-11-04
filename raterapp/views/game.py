@@ -2,7 +2,7 @@
 from rest_framework.viewsets import ViewSet
 from rest_framework.response import Response
 from rest_framework import status, serializers
-from raterapp.models import Game, Category, Designer, GameCategory
+from raterapp.models import Game, Category, Designer, GameCategory, GameImage
 
 class Games(ViewSet):
     """Games ViewSet"""
@@ -54,6 +54,7 @@ class Games(ViewSet):
             return Response({'message': ex.args[0]}, status=status.HTTP_404_NOT_FOUND)
 
         game.categories = GameCategory.objects.filter(game=game)
+        game.images = GameImage.objects.filter(game=game)
 
         serialized_game = GameSerializer(game, context={'request': request})
         return Response(serialized_game.data)
@@ -91,10 +92,17 @@ class GameCategorySerializer(serializers.ModelSerializer):
         fields = ('id', 'category')
         depth = 1
 
+class GameImageSerializer(serializers.ModelSerializer):
+    """JSON serializer for game_image objects"""
+    class Meta:
+        model = GameImage
+        fields = ('id', 'image')
+
 class GameSerializer(serializers.HyperlinkedModelSerializer):
     """JSON serializer for full game object"""
     designer = DesignerSerializer(many=False)
     categories = GameCategorySerializer(many=True)
+    images = GameImageSerializer(many=True)
 
     class Meta:
         model = Game
@@ -104,6 +112,6 @@ class GameSerializer(serializers.HyperlinkedModelSerializer):
         )
 
         fields = (
-            'id', 'url', 'title', 'description', 'year', 'num_players',
+            'id', 'url', 'title', 'description', 'year', 'num_players', 'images',
             'estimated_duration', 'age_recommendation', 'designer', 'categories', 'average_rating'
         )
