@@ -68,8 +68,9 @@ class Games(ViewSet):
         search_term = self.request.query_params.get('q', None)
         if search_term is not None:
             games = games.filter(
-                Q(title__contains=search_term) |
-                Q(description__contains=search_term)
+                Q(title__icontains=search_term) |
+                Q(description__icontains=search_term) |
+                Q(designer__name__icontains=search_term)
             )
 
         serializer = MinimalGameSerializer(games, many=True, context={'request': request})
