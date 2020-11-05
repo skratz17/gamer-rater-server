@@ -83,7 +83,13 @@ class Games(ViewSet):
 
         order_by = self.request.query_params.get('orderby', None)
         if order_by is not None and order_by in orderable_fields_dict:
-            games = games.order_by(orderable_fields_dict[order_by])
+            order_field = orderable_fields_dict[order_by]
+
+            direction = self.request.query_params.get('direction', 'asc')
+            if direction == 'desc':
+                order_field = '-' + order_field
+
+            games = games.order_by(order_field)
 
         serializer = MinimalGameSerializer(games, many=True, context={'request': request})
         return Response(serializer.data)
