@@ -1,7 +1,6 @@
 """Game database model module"""
 from django.db import models
 from statistics import mean
-from .game_review import GameReview
 
 class Game(models.Model):
     """Game database model"""
@@ -16,6 +15,6 @@ class Game(models.Model):
     @property
     def average_rating(self):
         """Unmapped model property for average rating of game"""
-        reviews = GameReview.objects.filter(game=self)
+        reviews = self.gamereview_set.all()
 
         return mean([ review.rating for review in reviews ])
