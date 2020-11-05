@@ -1,4 +1,5 @@
 """Games ViewSet and Serializer"""
+from django.db.models import Q
 from rest_framework.viewsets import ViewSet
 from rest_framework.response import Response
 from rest_framework import status, serializers
@@ -63,6 +64,14 @@ class Games(ViewSet):
         """GET all games"""
         # TODO: implement searching/filtering by query string param here
         games = Game.objects.all()
+
+        search_term = self.request.query_params.get('q', None)
+        if search_term is not None:
+            games = games.filter(
+                Q(title__icontains=search_term) |
+                Q(description__icontains=search_term) |
+                Q(designer__name__icontains=search_term)
+            )
 
         serializer = MinimalGameSerializer(games, many=True, context={'request': request})
         return Response(serializer.data)
