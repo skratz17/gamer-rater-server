@@ -73,6 +73,18 @@ class Games(ViewSet):
                 Q(designer__name__icontains=search_term)
             )
 
+        # Map query string parameter orderby values to property to actually
+        # order by in query
+        orderable_fields_dict = {
+            "year": "year",
+            "duration": "estimated_duration",
+            "designer": "designer__name"
+        }
+
+        order_by = self.request.query_params.get('orderby', None)
+        if order_by is not None and order_by in orderable_fields_dict:
+            games = games.order_by(orderable_fields_dict[order_by])
+
         serializer = MinimalGameSerializer(games, many=True, context={'request': request})
         return Response(serializer.data)
 
