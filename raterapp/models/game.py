@@ -25,9 +25,11 @@ class Game(models.Model):
 
     @property
     def images(self):
+        """Property to easily access GameImages for this game"""
         return self.gameimage_set.all()
 
     @property
     def categories(self):
+        """Property to easily access Categories defined via GameCategories for this game"""
         game_categories = self.game_categories.all()
         return [ gc.category for gc in game_categories ]

@@ -121,6 +121,14 @@ class Games(ViewSet):
         """GET all games"""
         games = Game.objects.all()
 
+        games = self._filter_by_search_term(games)
+        games = self._sort_by_query_string_param(games)
+
+        serializer = MinimalGameSerializer(games, many=True, context={'request': request})
+        return Response(serializer.data)
+
+    def _filter_by_search_term(self, games):
+        """Filter games QuerySet by search term indicated in query string param 'q' """
         search_term = self.request.query_params.get('q', None)
         if search_term is not None:
             games = games.filter(
@@ -129,8 +137,13 @@ class Games(ViewSet):
                 Q(designer__name__icontains=search_term)
             )
 
-        # Map query string parameter orderby values to property to actually
-        # order by in query
+        return games
+
+    def _sort_by_query_string_param(self, games):
+        """Sort games QuerySet by `orderby` query string param"""
+
+        # Dictionary mapping:
+        #   query string param orderby value -> actual name of Game model property to sort on
         orderable_fields_dict = {
             "year": "year",
             "duration": "estimated_duration",
@@ -141,14 +154,15 @@ class Games(ViewSet):
         if order_by is not None and order_by in orderable_fields_dict:
             order_field = orderable_fields_dict[order_by]
 
+            # Sort in direction indicated by `direction` query string param
+            # or ascending, by default
             direction = self.request.query_params.get('direction', 'asc')
             if direction == 'desc':
                 order_field = '-' + order_field
 
             games = games.order_by(order_field)
 
-        serializer = MinimalGameSerializer(games, many=True, context={'request': request})
-        return Response(serializer.data)
+        return games
 
 class MinimalGameSerializer(serializers.ModelSerializer):
     """JSON serializer for only game name, id, and url"""
