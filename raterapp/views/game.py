@@ -12,21 +12,29 @@ class Games(ViewSet):
 
     def create(self, request):
         """POST new game"""
-        categories = []
 
-        for category_id in request.data['categories']:
-            try:
-                category = Category.objects.get(pk=category_id)
-                categories.append(category)
-
-            except Category.DoesNotExist:
+        # Validate categories - ensure all ids in array refer to existing Categories
+        try:
+            (success, categories) = self._get_categories_from_ids(request.data['categories'])
+            if not success:
                 return Response(
-                    {'message': 'A categoryId in `categories` provided does not match an existing Category.'},
+                    {'message': 'Invalid value passed in categories array.'},
                     status=status.HTTP_400_BAD_REQUEST
                 )
+        except KeyError:
+            return Response(
+                {'message': 'Request must contain `categories` array in request body.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
+        # Validate designerId passed in request refers to existing Designer
         try:
             designer = Designer.objects.get(pk=request.data['designerId'])
+        except KeyError:
+            return Response(
+                {'message': 'Request must contain `designerId` value in request body.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
         except Designer.DoesNotExist:
             return Response(
                 {'message': '`designerId` provided does not match an existing Designer.'},
@@ -35,16 +43,21 @@ class Games(ViewSet):
 
         game = Game()
 
-        game.title = request.data['title']
-        game.description = request.data['description']
-        game.year = request.data['year']
-        game.num_players = request.data['numPlayers']
-        game.estimated_duration = request.data['estimatedDuration']
-        game.age_recommendation = request.data['ageRecommendation']
+        # Assign basic (non-related) properties to game from request body
+        try:
+            game = self._set_game_properties_from_dict(game, request.data)
+        except KeyError as key_error:
+            return Response(
+                {'message': f"Request must contain `{key_error.args[0]}` value in request body."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Assign related properties to game
         game.designer = designer
 
         game.save()
 
+        # Create and save GameCategory objects for each category-game relationship
         for category in categories:
             game_category = GameCategory(game=game, category=category)
             game_category.save()
@@ -52,27 +65,36 @@ class Games(ViewSet):
         return Response(status=status.HTTP_201_CREATED)
 
     def update(self, request, pk=None):
-        categories = []
-
-        for category_id in request.data['categories']:
-            try:
-                category = Category.objects.get(pk=category_id)
-                categories.append(category)
-
-            except Category.DoesNotExist:
+        
+        # Validate categories - ensure all ids in array refer to existing Categories
+        try:
+            (success, categories) = self._get_categories_from_ids(request.data['categories'])
+            if not success:
                 return Response(
-                    {'message': 'A category id in `categories` provided does not match an existing Category.'},
+                    {'message': 'Invalid value passed in categories array.'},
                     status=status.HTTP_400_BAD_REQUEST
                 )
+        except KeyError:
+            return Response(
+                {'message': 'Request must contain `categories` array in request body.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
+        # Validate designerId passed in request refers to existing Designer 
         try:
             designer = Designer.objects.get(pk=request.data['designerId'])
+        except KeyError:
+            return Response(
+                {'message': 'Request must contain `designerId` value in request body.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
         except Designer.DoesNotExist:
             return Response(
                 {'message': '`designerId` provided does not match an existing Designer.'},
                 status=status.HTTP_400_BAD_REQUEST
             )
 
+        # Find the game being updated by pk
         try:
             game = Game.objects.get(pk=pk)
         except Game.DoesNotExist:
@@ -81,16 +103,22 @@ class Games(ViewSet):
                 status=status.HTTP_404_NOT_FOUND
             )
 
-        game.title = request.data['title']
-        game.description = request.data['description']
-        game.year = request.data['year']
-        game.num_players = request.data['numPlayers']
-        game.estimated_duration = request.data['estimatedDuration']
-        game.age_recommendation = request.data['ageRecommendation']
+        # Assign basic (non-related) properties to game from request body
+        try:
+            game = self._set_game_properties_from_dict(game, request.data)
+        except KeyError as key_error:
+            return Response(
+                {'message': f"Request must contain `{key_error.args[0]}` value in request body."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Assign related properties to game
         game.designer = designer
 
         game.save()
 
+        # Reconcile current GameCategories defined for this game with new set defined in request:
+        # Get all GameCategory objects for this game
         current_game_categories = GameCategory.objects.filter(game=game)
 
         # Delete GameCategories that no longer apply to this game
@@ -126,6 +154,31 @@ class Games(ViewSet):
 
         serializer = MinimalGameSerializer(games, many=True, context={'request': request})
         return Response(serializer.data)
+
+    def _get_categories_from_ids(self, category_ids):
+        """Transform list of category_ids into list of Category model instances.
+        Returns tuple of the form:
+            tuple[0] - wasSuccessful - Boolean value representing if operation succeeded
+            tuple[1] - result - If successful, will contain list of Category model instances,
+                                otherwise will be None
+        """
+        try:
+            categories = [ Category.objects.get(pk=category_id) for category_id in category_ids ]
+            return ( True, categories )
+        except Category.DoesNotExist:
+            return ( False, None )
+
+    def _set_game_properties_from_dict(self, game, game_dict):
+        """Given a dictionary, set the properties of the game obj
+        to the values defined at the corresponding keys in the dictionary"""
+        game.title = game_dict['title']
+        game.description = game_dict['description']
+        game.year = game_dict['year']
+        game.num_players = game_dict['numPlayers']
+        game.estimated_duration = game_dict['estimatedDuration']
+        game.age_recommendation = game_dict['ageRecommendation']
+
+        return game
 
     def _filter_by_search_term(self, games):
         """Filter games QuerySet by search term indicated in query string param 'q' """
