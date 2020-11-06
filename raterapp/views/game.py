@@ -151,23 +151,11 @@ class Games(ViewSet):
         serializer = MinimalGameSerializer(games, many=True, context={'request': request})
         return Response(serializer.data)
 
-class MinimalGameSerializer(serializers.HyperlinkedModelSerializer):
+class MinimalGameSerializer(serializers.ModelSerializer):
     """JSON serializer for only game name, id, and url"""
-
     class Meta:
         model = Game
-        url = serializers.HyperlinkedIdentityField(
-            view_name="game",
-            lookup_field="id"
-        )
-        fields = ('id', 'url', 'title', 'average_rating')
-
-class DesignerSerializer(serializers.ModelSerializer):
-    """JSON serializer for designer"""
-
-    class Meta:
-        model = Designer
-        fields = ('id', 'name')
+        fields = ('id', 'title', 'average_rating')
 
 class GameCategorySerializer(serializers.ModelSerializer):
     """JSON serializer for game_category objects"""
@@ -182,20 +170,15 @@ class GameImageSerializer(serializers.ModelSerializer):
         model = GameImage
         fields = ('id', 'image')
 
-class GameSerializer(serializers.HyperlinkedModelSerializer):
+class GameSerializer(serializers.ModelSerializer):
     """JSON serializer for full game object"""
-    designer = DesignerSerializer(many=False)
     categories = GameCategorySerializer(many=True)
     images = GameImageSerializer(many=True)
 
     class Meta:
         model = Game
-        url = serializers.HyperlinkedIdentityField(
-            view_name='game',
-            lookup_field='id'
-        )
-
         fields = (
-            'id', 'url', 'title', 'description', 'year', 'num_players', 'images',
+            'id', 'title', 'description', 'year', 'num_players', 'images',
             'estimated_duration', 'age_recommendation', 'designer', 'categories', 'average_rating'
         )
+        depth = 1

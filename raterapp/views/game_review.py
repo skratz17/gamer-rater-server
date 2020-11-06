@@ -22,8 +22,6 @@ class GameReviews(ViewSet):
 
     def create(self, request):
         """POST a new review"""
-
-        # TODO: more validation!!
         player = Player.objects.get(user=request.auth.user)
 
         try:
