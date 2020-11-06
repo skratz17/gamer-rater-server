@@ -1,6 +1,6 @@
 """Game database model module"""
 from django.db import models
-from statistics import mean
+from statistics import StatisticsError, mean
 
 class Game(models.Model):
     """Game database model"""
@@ -17,4 +17,8 @@ class Game(models.Model):
         """Unmapped model property for average rating of game"""
         reviews = self.gamereview_set.all()
 
-        return mean([ review.rating for review in reviews ])
+        try:
+            return mean([ review.rating for review in reviews ])
+
+        except StatisticsError:
+            return None
