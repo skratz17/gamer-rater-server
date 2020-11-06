@@ -22,6 +22,17 @@ class GameReviews(ViewSet):
 
     def create(self, request):
         """POST a new review"""
+
+        # Verify that all required keys are present in POST body
+        missing_keys = self._get_missing_keys(request.data)
+        if len(missing_keys) > 0:
+            return Response(
+                {'message':
+                    f'Request body is missing the following required properties: {", ".join(missing_keys)}'
+                },
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
         player = Player.objects.get(user=request.auth.user)
 
         try:
@@ -42,6 +53,13 @@ class GameReviews(ViewSet):
         review.save()
 
         return Response({}, status=status.HTTP_201_CREATED)
+
+    def _get_missing_keys(self, data):
+        """Given the request.data for a POST/PUT request, return a list containing the
+        string values of all required keys that were not found in the request body"""
+        REQUIRED_KEYS = [ 'rating', 'review', 'timestamp', 'gameId' ]
+
+        return [ key for key in REQUIRED_KEYS if not key in data ]
 
 class GameReviewGameSerializer(serializers.ModelSerializer):
     """JSON serializer for game nested in a review"""

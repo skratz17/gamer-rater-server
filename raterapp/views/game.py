@@ -67,7 +67,7 @@ class Games(ViewSet):
                 },
                 status=status.HTTP_400_BAD_REQUEST
             )
-        
+
         # Validate categories - ensure all ids in array refer to existing Categories
         (success, categories) = self._get_categories_from_ids(request.data['categories'])
         if not success:
