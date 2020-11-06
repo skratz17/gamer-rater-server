@@ -13,7 +13,7 @@ class Games(ViewSet):
         """POST new game"""
 
         # Verify that all required keys are present in POST body
-        missing_keys = self._get_missing_keys(request.data)
+        missing_keys = self._get_missing_keys()
         if len(missing_keys) > 0:
             return Response(
                 {'message':
@@ -59,7 +59,7 @@ class Games(ViewSet):
     def update(self, request, pk=None):
 
         # Verify that all required keys are present in POST body
-        missing_keys = self._get_missing_keys(request.data)
+        missing_keys = self._get_missing_keys()
         if len(missing_keys) > 0:
             return Response(
                 {'message':
@@ -140,7 +140,7 @@ class Games(ViewSet):
         serializer = MinimalGameSerializer(games, many=True, context={'request': request})
         return Response(serializer.data)
 
-    def _get_missing_keys(self, data):
+    def _get_missing_keys(self):
         """Given the request.data for a POST/PUT request, return a list containing the
         string values of all required keys that were not found in the request body"""
         REQUIRED_KEYS = [
@@ -148,7 +148,7 @@ class Games(ViewSet):
             'ageRecommendation', 'designerId', 'categories'
         ]
 
-        return [ key for key in REQUIRED_KEYS if not key in data ]
+        return [ key for key in REQUIRED_KEYS if not key in self.request.data ]
 
     def _get_categories_from_ids(self, category_ids):
         """Transform list of category_ids into list of Category model instances.

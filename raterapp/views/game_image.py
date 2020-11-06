@@ -14,7 +14,7 @@ class GameImages(ViewSet):
     def create(self, request):
         """POST a new image"""
         # Validate that all required keys are present in request body
-        missing_keys = self._get_missing_keys(request.data)
+        missing_keys = self._get_missing_keys()
         if len(missing_keys) > 0:
             return Response(
                 {'message':
@@ -54,12 +54,12 @@ class GameImages(ViewSet):
 
         return Response({}, status=status.HTTP_201_CREATED)
 
-    def _get_missing_keys(self, data):
+    def _get_missing_keys(self):
         """Given the request.data for a POST/PUT request, return a list containing the
         string values of all required keys that were not found in the request body"""
         REQUIRED_KEYS = [ 'gameId', 'image' ]
 
-        return [ key for key in REQUIRED_KEYS if not key in data ]
+        return [ key for key in REQUIRED_KEYS if not key in self.request.data ]
 
 class GameImageSerializer(serializers.ModelSerializer):
     """JSON serializer for GameImage"""
