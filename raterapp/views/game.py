@@ -11,15 +11,18 @@ class Games(ViewSet):
     def create(self, request):
         """POST new game"""
         # TODO: implement more validation!
-        game = Game()
+        categories = []
 
-        try:
-            category = Category.objects.get(pk=request.data['categoryId'])
-        except Category.DoesNotExist:
-            return Response(
-                {'message': '`categoryId` provided does not match an existing Category.'},
-                status=status.HTTP_400_BAD_REQUEST
-            )
+        for category_id in request.data['categories']:
+            try:
+                category = Category.objects.get(pk=category_id)
+                categories.append(category)
+
+            except Category.DoesNotExist:
+                return Response(
+                    {'message': 'A categoryId in `categories` provided does not match an existing Category.'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
 
         try:
             designer = Designer.objects.get(pk=request.data['designerId'])
@@ -27,6 +30,54 @@ class Games(ViewSet):
             return Response(
                 {'message': '`designerId` provided does not match an existing Designer.'},
                 status=status.HTTP_400_BAD_REQUEST
+            )
+
+        game = Game()
+
+        game.title = request.data['title']
+        game.description = request.data['description']
+        game.year = request.data['year']
+        game.num_players = request.data['numPlayers']
+        game.estimated_duration = request.data['estimatedDuration']
+        game.age_recommendation = request.data['ageRecommendation']
+        game.designer = designer
+
+        game.save()
+
+        for category in categories:
+            game_category = GameCategory(game=game, category=category)
+            game_category.save()
+
+        return Response(status=status.HTTP_201_CREATED)
+
+    def update(self, request, pk=None):
+        categories = []
+
+        for category_id in request.data['categories']:
+            try:
+                category = Category.objects.get(pk=category_id)
+                categories.append(category)
+
+            except Category.DoesNotExist:
+                return Response(
+                    {'message': 'A category id in `categories` provided does not match an existing Category.'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+        try:
+            designer = Designer.objects.get(pk=request.data['designerId'])
+        except Designer.DoesNotExist:
+            return Response(
+                {'message': '`designerId` provided does not match an existing Designer.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        try:
+            game = Game.objects.get(pk=pk)
+        except Game.DoesNotExist:
+            return Response(
+                {'message': 'The game attempting to be accessed does not exist.'},
+                status=status.HTTP_404_NOT_FOUND
             )
 
         game.title = request.data['title']
@@ -39,13 +90,21 @@ class Games(ViewSet):
 
         game.save()
 
-        game_category = GameCategory()
-        game_category.game = game
-        game_category.category = category
+        current_game_categories = GameCategory.objects.filter(game=game)
 
-        game_category.save()
+        # Delete GameCategories that no longer apply to this game
+        current_game_categories.filter(~Q(category__in=categories)).delete()
 
-        return Response(status=status.HTTP_201_CREATED)
+        # Save new GameCategories for this game
+        for category in categories:
+            try:
+                current_game_categories.get(category=category)
+
+            except GameCategory.DoesNotExist:
+                game_category = GameCategory(game=game, category=category)
+                game_category.save()
+
+        return Response({}, status=status.HTTP_204_NO_CONTENT)
 
     def retrieve(self, request, pk=None):
         """GET game by id"""
