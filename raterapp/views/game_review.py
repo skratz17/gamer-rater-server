@@ -23,7 +23,16 @@ class GameReviews(ViewSet):
     def create(self, request):
         """POST a new review"""
 
-        # TODO: more validation!!
+        # Verify that all required keys are present in POST body
+        missing_keys = self._get_missing_keys(request.data)
+        if len(missing_keys) > 0:
+            return Response(
+                {'message':
+                    f'Request body is missing the following required properties: {", ".join(missing_keys)}'
+                },
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
         player = Player.objects.get(user=request.auth.user)
 
         try:
@@ -45,11 +54,12 @@ class GameReviews(ViewSet):
 
         return Response({}, status=status.HTTP_201_CREATED)
 
-class GameReviewUserSerializer(serializers.ModelSerializer):
-    """JSON serializer for user nested in a review (via player)"""
-    class Meta:
-        model = get_user_model()
-        fields = ('first_name', 'last_name')
+    def _get_missing_keys(self, data):
+        """Given the request.data for a POST/PUT request, return a list containing the
+        string values of all required keys that were not found in the request body"""
+        REQUIRED_KEYS = [ 'rating', 'review', 'timestamp', 'gameId' ]
+
+        return [ key for key in REQUIRED_KEYS if not key in data ]
 
 class GameReviewGameSerializer(serializers.ModelSerializer):
     """JSON serializer for game nested in a review"""
@@ -59,11 +69,9 @@ class GameReviewGameSerializer(serializers.ModelSerializer):
 
 class GameReviewPlayerSerializer(serializers.ModelSerializer):
     """JSON serializer for player nested in a review"""
-    user = GameReviewUserSerializer(many=False)
-
     class Meta:
         model = Player
-        fields = ('id', 'user', )
+        fields = ('id', 'full_name')
 
 class GameReviewSerializer(serializers.ModelSerializer):
     """JSON serializer for review"""
