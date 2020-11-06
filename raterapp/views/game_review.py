@@ -45,12 +45,6 @@ class GameReviews(ViewSet):
 
         return Response({}, status=status.HTTP_201_CREATED)
 
-class GameReviewUserSerializer(serializers.ModelSerializer):
-    """JSON serializer for user nested in a review (via player)"""
-    class Meta:
-        model = get_user_model()
-        fields = ('first_name', 'last_name')
-
 class GameReviewGameSerializer(serializers.ModelSerializer):
     """JSON serializer for game nested in a review"""
     class Meta:
@@ -59,11 +53,9 @@ class GameReviewGameSerializer(serializers.ModelSerializer):
 
 class GameReviewPlayerSerializer(serializers.ModelSerializer):
     """JSON serializer for player nested in a review"""
-    user = GameReviewUserSerializer(many=False)
-
     class Meta:
         model = Player
-        fields = ('id', 'user', )
+        fields = ('id', 'full_name')
 
 class GameReviewSerializer(serializers.ModelSerializer):
     """JSON serializer for review"""

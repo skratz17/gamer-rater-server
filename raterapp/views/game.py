@@ -10,7 +10,6 @@ class Games(ViewSet):
 
     def create(self, request):
         """POST new game"""
-        # TODO: implement more validation!
         categories = []
 
         for category_id in request.data['categories']:
@@ -121,7 +120,6 @@ class Games(ViewSet):
 
     def list(self, request):
         """GET all games"""
-        # TODO: implement searching/filtering by query string param here
         games = Game.objects.all()
 
         search_term = self.request.query_params.get('q', None)
