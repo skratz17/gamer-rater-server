@@ -9,32 +9,30 @@ from raterapp.views.category import CategorySerializer
 
 class Games(ViewSet):
     """Games ViewSet"""
-
     def create(self, request):
         """POST new game"""
 
-        # Validate categories - ensure all ids in array refer to existing Categories
-        try:
-            (success, categories) = self._get_categories_from_ids(request.data['categories'])
-            if not success:
-                return Response(
-                    {'message': 'Invalid value passed in categories array.'},
-                    status=status.HTTP_400_BAD_REQUEST
-                )
-        except KeyError:
+        # Verify that all required keys are present in POST body
+        missing_keys = self._get_missing_keys(request.data)
+        if len(missing_keys) > 0:
             return Response(
-                {'message': 'Request must contain `categories` array in request body.'},
+                {'message':
+                    f'Request body is missing the following required properties: {", ".join(missing_keys)}'
+                },
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Validate categories - ensure all ids in array refer to existing Categories
+        (success, categories) = self._get_categories_from_ids(request.data['categories'])
+        if not success:
+            return Response(
+                {'message': 'Invalid value passed in categories array.'},
                 status=status.HTTP_400_BAD_REQUEST
             )
 
         # Validate designerId passed in request refers to existing Designer
         try:
             designer = Designer.objects.get(pk=request.data['designerId'])
-        except KeyError:
-            return Response(
-                {'message': 'Request must contain `designerId` value in request body.'},
-                status=status.HTTP_400_BAD_REQUEST
-            )
         except Designer.DoesNotExist:
             return Response(
                 {'message': '`designerId` provided does not match an existing Designer.'},
@@ -44,13 +42,7 @@ class Games(ViewSet):
         game = Game()
 
         # Assign basic (non-related) properties to game from request body
-        try:
-            game = self._set_game_properties_from_dict(game, request.data)
-        except KeyError as key_error:
-            return Response(
-                {'message': f"Request must contain `{key_error.args[0]}` value in request body."},
-                status=status.HTTP_400_BAD_REQUEST
-            )
+        game = self._set_game_properties_from_dict(game, request.data)
 
         # Assign related properties to game
         game.designer = designer
@@ -65,29 +57,28 @@ class Games(ViewSet):
         return Response(status=status.HTTP_201_CREATED)
 
     def update(self, request, pk=None):
+
+        # Verify that all required keys are present in POST body
+        missing_keys = self._get_missing_keys(request.data)
+        if len(missing_keys) > 0:
+            return Response(
+                {'message':
+                    f'Request body is missing the following required properties: {", ".join(missing_keys)}'
+                },
+                status=status.HTTP_400_BAD_REQUEST
+            )
         
         # Validate categories - ensure all ids in array refer to existing Categories
-        try:
-            (success, categories) = self._get_categories_from_ids(request.data['categories'])
-            if not success:
-                return Response(
-                    {'message': 'Invalid value passed in categories array.'},
-                    status=status.HTTP_400_BAD_REQUEST
-                )
-        except KeyError:
+        (success, categories) = self._get_categories_from_ids(request.data['categories'])
+        if not success:
             return Response(
-                {'message': 'Request must contain `categories` array in request body.'},
+                {'message': 'Invalid value passed in categories array.'},
                 status=status.HTTP_400_BAD_REQUEST
             )
 
         # Validate designerId passed in request refers to existing Designer 
         try:
             designer = Designer.objects.get(pk=request.data['designerId'])
-        except KeyError:
-            return Response(
-                {'message': 'Request must contain `designerId` value in request body.'},
-                status=status.HTTP_400_BAD_REQUEST
-            )
         except Designer.DoesNotExist:
             return Response(
                 {'message': '`designerId` provided does not match an existing Designer.'},
@@ -104,13 +95,7 @@ class Games(ViewSet):
             )
 
         # Assign basic (non-related) properties to game from request body
-        try:
-            game = self._set_game_properties_from_dict(game, request.data)
-        except KeyError as key_error:
-            return Response(
-                {'message': f"Request must contain `{key_error.args[0]}` value in request body."},
-                status=status.HTTP_400_BAD_REQUEST
-            )
+        game = self._set_game_properties_from_dict(game, request.data)
 
         # Assign related properties to game
         game.designer = designer
@@ -154,6 +139,14 @@ class Games(ViewSet):
 
         serializer = MinimalGameSerializer(games, many=True, context={'request': request})
         return Response(serializer.data)
+
+    def _get_missing_keys(self, data):
+        REQUIRED_KEYS = [
+            'title', 'description', 'year', 'numPlayers', 'estimatedDuration',
+            'ageRecommendation', 'designerId', 'categories'
+        ]
+
+        return [ key for key in REQUIRED_KEYS if not key in data ]
 
     def _get_categories_from_ids(self, category_ids):
         """Transform list of category_ids into list of Category model instances.
