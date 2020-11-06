@@ -26,3 +26,8 @@ class Game(models.Model):
     @property
     def images(self):
         return self.gameimage_set.all()
+
+    @property
+    def categories(self):
+        game_categories = self.game_categories.all()
+        return [ gc.category for gc in game_categories ]

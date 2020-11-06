@@ -5,6 +5,7 @@ from rest_framework.response import Response
 from rest_framework import status, serializers
 from raterapp.models import Game, Category, Designer, GameCategory, GameImage
 from raterapp.views.game_image import GameImageSerializer
+from raterapp.views.category import CategorySerializer
 
 class Games(ViewSet):
     """Games ViewSet"""
@@ -113,8 +114,6 @@ class Games(ViewSet):
         except Game.DoesNotExist as ex:
             return Response({'message': ex.args[0]}, status=status.HTTP_404_NOT_FOUND)
 
-        game.categories = GameCategory.objects.filter(game=game)
-
         serialized_game = GameSerializer(game, context={'request': request})
         return Response(serialized_game.data)
 
@@ -157,16 +156,9 @@ class MinimalGameSerializer(serializers.ModelSerializer):
         model = Game
         fields = ('id', 'title', 'average_rating')
 
-class GameCategorySerializer(serializers.ModelSerializer):
-    """JSON serializer for game_category objects"""
-    class Meta:
-        model = GameCategory
-        fields = ('id', 'category')
-        depth = 1
-
 class GameSerializer(serializers.ModelSerializer):
     """JSON serializer for full game object"""
-    categories = GameCategorySerializer(many=True)
+    categories = CategorySerializer(many=True)
     images = GameImageSerializer(many=True)
 
     class Meta:
