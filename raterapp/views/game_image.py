@@ -1,4 +1,5 @@
 """Game Image ViewSet and Serializer"""
+from rest_framework import serializers
 from rest_framework.viewsets import ViewSet
 from rest_framework.response import Response
 from rest_framework import status
@@ -35,3 +36,9 @@ class GameImages(ViewSet):
         image.save()
 
         return Response({}, status=status.HTTP_201_CREATED)
+
+class GameImageSerializer(serializers.ModelSerializer):
+    """JSON serializer for GameImage"""
+    class Meta:
+        model = GameImage
+        fields = ('id', 'image')

@@ -22,3 +22,7 @@ class Game(models.Model):
 
         except StatisticsError:
             return None
+
+    @property
+    def images(self):
+        return self.gameimage_set.all()
