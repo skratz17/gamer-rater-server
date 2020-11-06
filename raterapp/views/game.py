@@ -141,7 +141,7 @@ class Games(ViewSet):
         return Response(serializer.data)
 
     def _get_missing_keys(self, data):
-        """Given the request.data for a POST/PUT request, return a list containing the 
+        """Given the request.data for a POST/PUT request, return a list containing the
         string values of all required keys that were not found in the request body"""
         REQUIRED_KEYS = [
             'title', 'description', 'year', 'numPlayers', 'estimatedDuration',
