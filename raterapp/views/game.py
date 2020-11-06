@@ -11,15 +11,18 @@ class Games(ViewSet):
     def create(self, request):
         """POST new game"""
         # TODO: implement more validation!
-        game = Game()
+        categories = []
 
-        try:
-            category = Category.objects.get(pk=request.data['categoryId'])
-        except Category.DoesNotExist:
-            return Response(
-                {'message': '`categoryId` provided does not match an existing Category.'},
-                status=status.HTTP_400_BAD_REQUEST
-            )
+        for category_id in request.data['categories']:
+            try:
+                category = Category.objects.get(pk=category_id)
+                categories.append(category)
+
+            except Category.DoesNotExist:
+                return Response(
+                    {'message': '`categoryId` provided does not match an existing Category.'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
 
         try:
             designer = Designer.objects.get(pk=request.data['designerId'])
@@ -28,6 +31,8 @@ class Games(ViewSet):
                 {'message': '`designerId` provided does not match an existing Designer.'},
                 status=status.HTTP_400_BAD_REQUEST
             )
+
+        game = Game()
 
         game.title = request.data['title']
         game.description = request.data['description']
@@ -39,13 +44,26 @@ class Games(ViewSet):
 
         game.save()
 
-        game_category = GameCategory()
-        game_category.game = game
-        game_category.category = category
-
-        game_category.save()
+        for category in categories:
+            game_category = GameCategory(game=game, category=category)
+            game_category.save()
 
         return Response(status=status.HTTP_201_CREATED)
+
+    # def update(self, request, pk=None):
+    #     current_game_categories = GameCategory.objects.filter(game=game)
+
+    #     # Delete GameCategories that no longer apply to this game
+    #     current_game_categories.filter(~Q(category__in=categories)).delete()
+
+    #     # Save new GameCategories for this game
+    #     for category in categories:
+    #         try:
+    #             current_game_categories.get(category=category)
+
+    #         except GameCategory.DoesNotExist:
+    #             game_category = GameCategory(game=game, category=category)
+    #             game_category.save()
 
     def retrieve(self, request, pk=None):
         """GET game by id"""
