@@ -88,6 +88,8 @@ class Games(ViewSet):
         game.age_recommendation = request.data['ageRecommendation']
         game.designer = designer
 
+        game.save()
+
         current_game_categories = GameCategory.objects.filter(game=game)
 
         # Delete GameCategories that no longer apply to this game
