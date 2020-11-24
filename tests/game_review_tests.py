@@ -88,3 +88,59 @@ class GameReviewTests(APITestCase):
 
         response = self.client.post("/reviews", data, format='json')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_get_all_game_reviews(self):
+        """
+        Get all game reviews
+        """
+        self._seed_game_reviews()
+
+        response = self.client.get('/reviews')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        json_response = json.loads(response.content)
+        self.assertEqual(len(json_response), 2)
+        self.assertEqual(json_response[0]["review"], "a romp")
+        self.assertEqual(json_response[1]["review"], "a whirlwind")
+
+    def test_get_game_reviews_for_single_game(self):
+        """
+        Get all game reviews for game id of 1, and then for a nonexistent game id
+        """
+        self._seed_game_reviews()
+
+        response = self.client.get('/reviews?gameId=1')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        json_response = json.loads(response.content)
+        self.assertEqual(len(json_response), 2)
+        self.assertEqual(json_response[0]["review"], "a romp")
+        self.assertEqual(json_response[1]["review"], "a whirlwind")
+
+        response = self.client.get('/reviews?gameId=666')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        json_response = json.loads(response.content)
+        self.assertEqual(len(json_response), 0)
+
+    def _seed_game_reviews(self):
+        """
+        Save two game reviews in the DB
+        """
+        review = GameReview(
+            game_id= 1,
+            player_id=1,
+            rating= 9,
+            review= "a romp",
+            timestamp= "2020-11-20 17:50:37.451000" 
+        )
+        review.save()
+
+        review = GameReview(
+            game_id= 1,
+            player_id=1,
+            rating= 8,
+            review= "a whirlwind",
+            timestamp= "2020-11-20 17:50:37.451000" 
+        )
+        review.save()
