@@ -28,6 +28,9 @@ class CategoryTests(APITestCase):
         category.save()
 
     def test_get_existing_category(self):
+        """
+        Test getting a single category by ID that should exist.
+        """
         response = self.client.get("/categories/1")
         json_response = json.loads(response.content)
 
@@ -37,6 +40,32 @@ class CategoryTests(APITestCase):
         self.assertEqual(json_response["name"], "Strategy")
 
     def test_get_nonexisting_category(self):
+        """
+        Test getting a single category by ID that should not exist.
+        """
         response = self.client.get("/categories/69")
 
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_get_all_categories(self):
+        """
+        Test getting all categories.
+        """
+        response = self.client.get("/categories")
+        json_response = json.loads(response.content)
+
+        self.assertEqual(len(json_response), 1)
+        self.assertEqual(json_response[0]["id"], 1)
+        self.assertEqual(json_response[0]["name"], "Strategy")
+
+        category = Category(name="Action")
+        category.save()
+
+        response = self.client.get("/categories")
+        json_response = json.loads(response.content)
+
+        self.assertEqual(len(json_response), 2)
+        self.assertEqual(json_response[0]["id"], 1)
+        self.assertEqual(json_response[0]["name"], "Strategy")
+        self.assertEqual(json_response[1]["id"], 2)
+        self.assertEqual(json_response[1]["name"], "Action")
