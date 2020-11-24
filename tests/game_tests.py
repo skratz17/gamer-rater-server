@@ -6,7 +6,7 @@ from raterapp.models import Game, Category, GameCategory, Designer
 class GameTests(APITestCase):
     def setUp(self):
         """
-        Create a new account, and a default category and designer
+        Create a new account, three default categories, and a designer
         """
         url = "/register"
         data = {
@@ -25,6 +25,12 @@ class GameTests(APITestCase):
         self.client.credentials(HTTP_AUTHORIZATION='Token ' + self.token)
 
         category = Category(name="Strategy")
+        category.save()
+
+        category = Category(name="Sports")
+        category.save()
+
+        category = Category(name="RPG")
         category.save()
 
         designer = Designer(name="Firaxis")
@@ -133,25 +139,7 @@ class GameTests(APITestCase):
         """
         Test getting a single, valid, existing game from the DB.
         """
-
-        # Manually create a game and insert into DB
-        game = Game(
-            title="Civ VI",
-            description="This fun game",
-            year=2016,
-            num_players=12,
-            estimated_duration=300,
-            age_recommendation=13,
-            designer_id=1,
-        )
-        game.save()
-
-        # Create a GameCategory for that game
-        gameCategory = GameCategory(
-            game_id=game.id,
-            category_id=1
-        )
-        gameCategory.save()
+        self._seed_game_db()
 
         response = self.client.get('/games/1')
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -174,3 +162,151 @@ class GameTests(APITestCase):
         """
         response = self.client.get('/games/666')
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_get_all_games_on_empty_db(self):
+        """
+        Test getting all games when there are no games in the DB.
+        """
+        response = self.client.get('/games')
+        json_response = json.loads(response.content)
+
+        self.assertEqual(len(json_response), 0)
+
+    def test_get_all_games(self):
+        # seed db with three games
+        self._seed_game_db(3)
+
+        response = self.client.get('/games')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        json_response = json.loads(response.content)
+        self.assertEqual(len(json_response), 3)
+
+        self.assertEqual(json_response[0]["title"], "Civ VI")
+        self.assertEqual(json_response[1]["title"], "NHL 20")
+        self.assertEqual(json_response[2]["title"], "Persona V")
+
+    def test_get_all_games_by_search_term(self):
+        # seed db with three games
+        self._seed_game_db(3)
+
+        # search for persona -> should return Persona V
+        response = self.client.get('/games?q=persona')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        json_response = json.loads(response.content)
+        self.assertEqual(len(json_response), 1)
+        self.assertEqual(json_response[0]["title"], "Persona V")
+
+        # search for fun -> should return Civ VI and Persona V (matching on description text)
+        response = self.client.get('/games?q=fun')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        json_response = json.loads(response.content)
+        self.assertEqual(len(json_response), 2)
+        self.assertEqual(json_response[0]["title"], "Civ VI")
+        self.assertEqual(json_response[1]["title"], "Persona V")
+
+        # search for Firaxis -> should return all three games (matching on designer name)
+        response = self.client.get('/games?q=Firaxis')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        json_response = json.loads(response.content)
+        self.assertEqual(len(json_response), 3)
+        self.assertEqual(json_response[0]["title"], "Civ VI")
+        self.assertEqual(json_response[1]["title"], "NHL 20")
+        self.assertEqual(json_response[2]["title"], "Persona V")
+
+    def test_get_games_sorted_by_year(self):
+        # seed db with three games
+        self._seed_game_db(3)
+
+        # get games ordered by year ascending
+        response = self.client.get('/games?orderby=year')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        json_response = json.loads(response.content)
+        self.assertEqual(len(json_response), 3)
+        self.assertEqual(json_response[0]["id"], 1)
+        self.assertEqual(json_response[1]["id"], 3)
+        self.assertEqual(json_response[2]["id"], 2)
+
+        # get games ordered by year descending
+        response = self.client.get('/games?orderby=year&direction=desc')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        json_response = json.loads(response.content)
+        self.assertEqual(len(json_response), 3)
+        self.assertEqual(json_response[0]["id"], 2)
+        self.assertEqual(json_response[1]["id"], 3)
+        self.assertEqual(json_response[2]["id"], 1)
+
+    def test_get_games_sorted_by_duration(self):
+        # seed db with three games
+        self._seed_game_db(3)
+
+        # get games ordered by duration ascending
+        response = self.client.get('/games?orderby=duration')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        json_response = json.loads(response.content)
+        self.assertEqual(len(json_response), 3)
+        self.assertEqual(json_response[0]["id"], 2)
+        self.assertEqual(json_response[1]["id"], 1)
+        self.assertEqual(json_response[2]["id"], 3)
+
+        # get games ordered by duration descending
+        response = self.client.get('/games?orderby=duration&direction=desc')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        json_response = json.loads(response.content)
+        self.assertEqual(len(json_response), 3)
+        self.assertEqual(json_response[0]["id"], 3)
+        self.assertEqual(json_response[1]["id"], 1)
+        self.assertEqual(json_response[2]["id"], 2)
+
+    def test_get_games_sorted_by_year_and_filtered_by_search_term(self):
+        # seed db with three games
+        self._seed_game_db(3)
+
+        #get games with "fun" in description, ordered by year
+        response = self.client.get('/games?q=fun&orderby=year')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        json_response = json.loads(response.content)
+        self.assertEqual(len(json_response), 2)
+        self.assertEqual(json_response[0]["id"], 1)
+        self.assertEqual(json_response[1]["id"], 3)
+
+    def _seed_game_db(self, count=1):
+        """
+        Manually create game data and insert into DB via ORM.
+        """
+        games = [
+            Game(
+                title="Civ VI", description="This fun game", year=2016,
+                num_players=12, estimated_duration=300, age_recommendation=13, designer_id=1
+            ),            
+            Game(
+                title="NHL 20", description="A bad game", year=2019,
+                num_players=4, estimated_duration=15, age_recommendation=13, designer_id=1
+            ),
+            Game(
+                title="Persona V", description="A very fun game", year=2017,
+                num_players=1, estimated_duration=3000, age_recommendation=18, designer_id=1
+            )
+        ]
+
+        game_categories = [
+            [ GameCategory(game_id=1, category_id=1) ],
+            [ GameCategory(game_id=3, category_id=2) ],
+            [ GameCategory(game_id=2, category_id=1), GameCategory(game_id=2, category_id=3) ]
+        ]
+
+        for idx in range(count):
+            game = games[idx]
+            game.save()
+
+            game_category_list = game_categories[idx]
+            for game_category in game_category_list:
+                game_category.save()
