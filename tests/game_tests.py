@@ -65,3 +65,66 @@ class GameTests(APITestCase):
         self.assertEqual(json_response["designer"]["id"], 1)
         self.assertEqual(len(json_response["categories"]), 1)
         self.assertEqual(json_response["categories"][0]["id"], 1)
+
+    def test_create_game_with_missing_required_property(self):
+        """
+        Test creating a game that is missing a required property in request body.
+        """
+
+        url = "/games"
+
+        # "title" property not included
+        data = {
+            "description": "This fun game",
+            "year": 2016,
+            "numPlayers": 12,
+            "estimatedDuration": 300,
+            "ageRecommendation": 13,
+            "designerId": 1,
+            "categories": [ 1 ]
+        }
+
+        response = self.client.post(url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_create_game_with_invalid_category_id(self):
+        """
+        Test creating a game that includes invalid category ids in categories array
+        """
+
+        # Create the valid game
+        url = "/games"
+        data = {
+            "title": "Civ VI",
+            "description": "This fun game",
+            "year": 2016,
+            "numPlayers": 12,
+            "estimatedDuration": 300,
+            "ageRecommendation": 13,
+            "designerId": 1,
+            "categories": [ 1, 666 ] # category id of 666 is invalid
+        }
+
+        response = self.client.post(url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_create_game_with_invalid_designer_id(self):
+        """
+        Test creating a game that includes invalid category ids in categories array
+        """
+
+        # Create the valid game
+        url = "/games"
+        data = {
+            "title": "Civ VI",
+            "description": "This fun game",
+            "year": 2016,
+            "numPlayers": 12,
+            "estimatedDuration": 300,
+            "ageRecommendation": 13,
+            "designerId": 666, # designer id of 666 is invalid
+            "categories": [ 1 ] 
+        }
+
+        response = self.client.post(url, data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
