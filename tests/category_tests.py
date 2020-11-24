@@ -22,8 +22,21 @@ class CategoryTests(APITestCase):
         json_response = json.loads(response.content)
 
         self.token = json_response["token"]
-
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.client.credentials(HTTP_AUTHORIZATION='Token ' + self.token)
 
         category = Category(name="Strategy")
         category.save()
+
+    def test_get_existing_category(self):
+        response = self.client.get("/categories/1")
+        json_response = json.loads(response.content)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        self.assertEqual(json_response["id"], 1)
+        self.assertEqual(json_response["name"], "Strategy")
+
+    def test_get_nonexisting_category(self):
+        response = self.client.get("/categories/69")
+
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
