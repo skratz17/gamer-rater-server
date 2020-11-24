@@ -1,7 +1,7 @@
 import json
 from rest_framework import status
 from rest_framework.test import APITestCase
-from raterapp.models import Game, Category, Designer
+from raterapp.models import Game, Category, GameCategory, Designer
 
 class GameTests(APITestCase):
     def setUp(self):
@@ -128,3 +128,49 @@ class GameTests(APITestCase):
 
         response = self.client.post(url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_get_single_game(self):
+        """
+        Test getting a single, valid, existing game from the DB.
+        """
+
+        # Manually create a game and insert into DB
+        game = Game(
+            title="Civ VI",
+            description="This fun game",
+            year=2016,
+            num_players=12,
+            estimated_duration=300,
+            age_recommendation=13,
+            designer_id=1,
+        )
+        game.save()
+
+        # Create a GameCategory for that game
+        gameCategory = GameCategory(
+            game_id=game.id,
+            category_id=1
+        )
+        gameCategory.save()
+
+        response = self.client.get('/games/1')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        json_response = json.loads(response.content)
+
+        self.assertEqual(json_response["title"], "Civ VI")
+        self.assertEqual(json_response["description"], "This fun game")
+        self.assertEqual(json_response["year"], 2016)
+        self.assertEqual(json_response["num_players"], 12)
+        self.assertEqual(json_response["estimated_duration"], 300)
+        self.assertEqual(json_response["age_recommendation"], 13)
+        self.assertEqual(json_response["designer"]["id"], 1)
+        self.assertEqual(len(json_response["categories"]), 1)
+        self.assertEqual(json_response["categories"][0]["id"], 1)
+
+    def test_get_nonexistent_single_game(self):
+        """
+        Test getting a game by an ID that is not in the database.
+        """
+        response = self.client.get('/games/666')
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
