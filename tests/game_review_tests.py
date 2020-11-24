@@ -35,6 +35,10 @@ class GameReviewTests(APITestCase):
         game.save()
 
     def test_create_valid_game_review(self):
+        """
+        Test creating a valid game review
+        """
+
         data = {
             "gameId": 1,
             "rating": 9,
@@ -54,3 +58,33 @@ class GameReviewTests(APITestCase):
 
         thisDatetime = datetime.datetime.fromisoformat("2020-11-20 17:50:37.451000")
         self.assertEqual(datetime.datetime.timestamp(thisDatetime), datetime.datetime.timestamp(review.timestamp))
+
+    def test_create_game_review_with_missing_required_property(self):
+        """
+        Test creating a game without a required PUT body property
+        """
+
+        # missing required timestamp property
+        data = {
+            "gameId": 1,
+            "rating": 9,
+            "review": "a romp"
+        }
+
+        response = self.client.post("/reviews", data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_create_game_review_for_nonexistent_game(self):
+        """
+        Test creating a game review for an invalid game id
+        """
+
+        data = {
+            "gameId": 666,
+            "rating": 9,
+            "review": "a romp",
+            "timestamp": "2020-11-20 17:50:37.451000"
+        }
+
+        response = self.client.post("/reviews", data, format='json')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
