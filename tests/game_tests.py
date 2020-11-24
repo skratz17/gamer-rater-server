@@ -98,7 +98,6 @@ class GameTests(APITestCase):
         Test creating a game that includes invalid category ids in categories array
         """
 
-        # Create the valid game
         url = "/games"
         data = {
             "title": "Civ VI",
@@ -116,10 +115,9 @@ class GameTests(APITestCase):
 
     def test_create_game_with_invalid_designer_id(self):
         """
-        Test creating a game that includes invalid category ids in categories array
+        Test creating a game that includes invalid designer id.
         """
 
-        # Create the valid game
         url = "/games"
         data = {
             "title": "Civ VI",
@@ -277,6 +275,109 @@ class GameTests(APITestCase):
         self.assertEqual(len(json_response), 2)
         self.assertEqual(json_response[0]["id"], 1)
         self.assertEqual(json_response[1]["id"], 3)
+
+    def test_valid_update_game(self):
+        # seed db with one game
+        self._seed_game_db(1)
+
+        game = Game.objects.get(pk=1)
+        self.assertEqual(game.title, "Civ VI")
+
+        update = {
+            "title": "Civ V",
+            "description": "This fun game",
+            "year": 2016,
+            "numPlayers": 12,
+            "estimatedDuration": 300,
+            "ageRecommendation": 13,
+            "designerId": 1, 
+            "categories": [ 1 ] 
+        }
+
+        response = self.client.put('/games/1', update, format='json')
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+
+        game = Game.objects.get(pk=1)
+        self.assertEqual(game.title, "Civ V")
+
+    def test_update_game_with_missing_required_property(self):
+        # seed db with one game
+        self._seed_game_db(1)
+
+        # update body does not include required "title" property
+        update = {
+            "description": "This fun game",
+            "year": 2016,
+            "numPlayers": 12,
+            "estimatedDuration": 300,
+            "ageRecommendation": 13,
+            "designerId": 1, 
+            "categories": [ 1 ] 
+        }
+
+        response = self.client.put('/games/1', update, format='json')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_update_game_with_invalid_category_id(self):
+        """
+        Test creating a game that includes invalid category ids in categories array
+        """
+        # seed db with one game
+        self._seed_game_db(1)
+
+        update = {
+            "title": "Civ VI",
+            "description": "This fun game",
+            "year": 2016,
+            "numPlayers": 12,
+            "estimatedDuration": 300,
+            "ageRecommendation": 13,
+            "designerId": 1,
+            "categories": [ 1, 666 ] # category id of 666 is invalid
+        }
+
+        response = self.client.put("/games/1", update, format='json')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_update_game_with_invalid_designer_id(self):
+        """
+        Test creating a game that includes invalid designer id.
+        """
+        # seed db with one game
+        self._seed_game_db(1)
+
+        update = {
+            "title": "Civ VI",
+            "description": "This fun game",
+            "year": 2016,
+            "numPlayers": 12,
+            "estimatedDuration": 300,
+            "ageRecommendation": 13,
+            "designerId": 666, # designer id of 666 is invalid
+            "categories": [ 1 ]
+        }
+
+        response = self.client.put("/games/1", update, format='json')
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_update_nonexistent_game(self):
+        """
+        Test updating a game with an ID that does not exist
+        """
+
+        update = {
+            "title": "Civ V",
+            "description": "This fun game",
+            "year": 2016,
+            "numPlayers": 12,
+            "estimatedDuration": 300,
+            "ageRecommendation": 13,
+            "designerId": 1,
+            "categories": [ 1 ]
+        }
+
+        response = self.client.put("/games/1", update, format='json')
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
     def _seed_game_db(self, count=1):
         """
